@@ -1,92 +1,101 @@
 package com.example.vincent.webviewdemo;
 
 import android.app.Activity;
-import android.graphics.Bitmap;
+import android.content.Intent;
 import android.os.Bundle;
+import android.view.KeyEvent;
 import android.view.View;
-import android.webkit.WebChromeClient;
-import android.webkit.WebView;
-import android.webkit.WebViewClient;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ProgressBar;
+import android.widget.Toast;
 
 /**
  * @创建者 Vincent
  * @创时间 2016/10/24 14:15
  * @描述 $ 简单浏览器
  */
-public class MainActivity extends Activity {
+public class MainActivity extends Activity implements View.OnClickListener{
 
-    private WebView mWebView;
-    private ProgressBar mProgressBar;
-    private EditText mEditText;
+    private long mExitTime;
     private Button mSearch;
+    private EditText mEditText;
+    private Button mBaidu;
+    private Button mTaoBao;
+    private Button mJingDong;
+    private Button mSina;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        init();
-        initWebView();
+        initView();
         initListener();
     }
 
-    private void initListener() {
-        mSearch.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                String url = mEditText.getText().toString().trim();
-                mWebView.loadUrl("http://"+url);
-            }
-        });
-    }
-
-    private void init() {
-        mWebView = (WebView) findViewById(R.id.webview);
-        mProgressBar = (ProgressBar) findViewById(R.id.webview_pb);
-        mEditText = (EditText)findViewById(R.id.search_et);
+    private void initView() {
+        mEditText = (EditText) findViewById(R.id.search_et);
         mSearch = (Button) findViewById(R.id.search_btn);
+        mBaidu = (Button) findViewById(R.id.baidu);
+        mTaoBao = (Button) findViewById(R.id.taobao);
+        mSina = (Button) findViewById(R.id.sina);
+        mJingDong = (Button) findViewById(R.id.jingdong);
     }
 
-    private void initWebView() {
-        mProgressBar.setVisibility(View.GONE);
-        mWebView.loadUrl("https://www.baidu.com/");
-        mWebView.getSettings().setJavaScriptEnabled(true);
-        mWebView.getSettings().setSupportZoom(true);
-        mWebView.getSettings().setBuiltInZoomControls(true);
-        mWebView.setWebViewClient(new WebViewClient() {
-            @Override
-            public boolean shouldOverrideUrlLoading(WebView view, String url) {
-                view.loadUrl(url);
-                return true;// 自己处理html里面link
-            }
-        });
-        //监听 webview 的生命周期
-        mWebView.setWebViewClient(new WebViewClient(){
-            @Override
-            public void onPageStarted(WebView view, String url, Bitmap favicon) {
-                super.onPageStarted(view, url, favicon);
-                mProgressBar.setVisibility(View.VISIBLE);
-            }
-
-            @Override
-            public void onPageFinished(WebView view, String url) {
-                super.onPageFinished(view, url);
-                mProgressBar.setVisibility(View.INVISIBLE);
-            }
-        });
-
-        //监听webview 的更新状态
-        mWebView.setWebChromeClient(new WebChromeClient(){
-            @Override
-            public void onProgressChanged(WebView view, int newProgress) {
-                super.onProgressChanged(view, newProgress);
-                mProgressBar.setProgress(newProgress);
-            }
-        });
-
+    private void initListener() {
+        mSearch.setOnClickListener(this);
+        mBaidu.setOnClickListener(this);
+        mTaoBao.setOnClickListener(this);
+        mSina.setOnClickListener(this);
+        mJingDong.setOnClickListener(this);
     }
 
+
+    /**
+     * 按两次返回键退出应用
+     */
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if (keyCode == KeyEvent.KEYCODE_BACK && event.getAction() == KeyEvent.ACTION_DOWN) {
+            if ((System.currentTimeMillis() - mExitTime) > 2000) { //System.currentTimeMillis()无论何时调用，肯定大于2000
+                Toast.makeText(getApplicationContext(), "再按一次退出程序", Toast.LENGTH_SHORT).show();
+                mExitTime = System.currentTimeMillis();
+            } else {
+                finish();
+                System.exit(0);
+            }
+            return true;
+        }
+        return super.onKeyDown(keyCode, event);
+    }
+
+
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()){
+            case R.id.search_btn:
+                String url = mEditText.getText().toString().trim();
+                jump2WebView(url);
+                break;
+            case R.id.baidu:
+                jump2WebView("www.baidu.com");
+                break;
+            case R.id.taobao:
+                jump2WebView("www.taobao.com");
+                break;
+            case R.id.sina:
+                jump2WebView("www.sina.cn");
+                break;
+            case R.id.jingdong:
+                jump2WebView("www.jd.com");
+                break;
+            default:
+                break;
+        }
+    }
+    private void jump2WebView(String url){
+        Intent intent = new Intent(this,WebViewActivity.class);
+        intent.putExtra("url",url);
+        startActivity(intent);
+    }
 }
